@@ -5,6 +5,9 @@ import lombok.Data;
 import javax.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 
+import ru.practicum.shareit.item.model.*;
+import ru.practicum.shareit.user.*;
+
 @Data
 public class CommentDto {
 
@@ -14,10 +17,10 @@ public class CommentDto {
     private String text;
 
     @NotBlank(message = "id вещи не может быть пустым")
-    private Integer item;
+    private Item item;
 
     @NotBlank(message = "id автора не может быть пустым")
-    private Integer author;
+    private User author;
 
     @NotBlank(message = "имя автора не может быть пустым")
     private String authorName;

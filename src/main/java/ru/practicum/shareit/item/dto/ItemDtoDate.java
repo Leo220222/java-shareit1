@@ -6,6 +6,8 @@ import ru.practicum.shareit.booking.Booking;
 import java.util.HashSet;
 import java.util.Set;
 
+import ru.practicum.shareit.user.*;
+
 @Data
 public class ItemDtoDate {
 
@@ -17,7 +19,7 @@ public class ItemDtoDate {
 
     private Boolean available;
 
-    private Integer owner;
+    private User owner;
 
     private Integer request;
 
