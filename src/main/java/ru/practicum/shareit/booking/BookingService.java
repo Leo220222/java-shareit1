@@ -1,7 +1,7 @@
 package ru.practicum.shareit.booking;
 
-import ru.practicum.shareit.booking.dto.BookingDto;
-import ru.practicum.shareit.booking.dto.StatusDto;
+import ru.practicum.shareit.booking.dto.*;
+
 
 import java.util.Collection;
 
