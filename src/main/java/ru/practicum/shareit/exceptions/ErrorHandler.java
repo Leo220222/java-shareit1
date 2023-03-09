@@ -25,18 +25,18 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse serverError(final Throwable e) {
-        return new ErrorResponse(e.getMessage());
+        return new ErrorResponse(500, e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse dataNotFound(final NotFoundException e) {
-        return new ErrorResponse(e.getMessage());
+        return new ErrorResponse(404, e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse responseValidateException(final ResponseValidateException e) {
-        return new ErrorResponse(e.getMessage());
+        return new ErrorResponse(400, e.getMessage());
     }
 }

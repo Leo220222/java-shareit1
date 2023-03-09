@@ -8,26 +8,26 @@ import ru.practicum.shareit.user.User;
 
 @Service
 public class BookingMapper {
-    public Booking toBooking(BookingDto bookingDto, Integer userId) {
+    public Booking toBooking(BookingDto bookingDto) {
         Booking booking = new Booking();
         booking.setId(bookingDto.getId());
         booking.setStatus(bookingDto.getStatus());
         booking.setStart(bookingDto.getStart());
         booking.setEnd(bookingDto.getEnd());
-        booking.setItem(bookingDto.getItemId());
-        booking.setBookerId(userId);
+        booking.setItem(bookingDto.getItem());
+        booking.setBooker(bookingDto.getBooker());
         return booking;
     }
 
-    public BookingDto toDto(Booking booking, Item item, User user) {
+    public BookingDto toDto(Booking booking) {
         BookingDto dto = new BookingDto();
         dto.setId(booking.getId());
         dto.setStart(booking.getStart());
         dto.setEnd(booking.getEnd());
-        dto.setBooker(user);
-        dto.setUserId(booking.getBookerId());
-        dto.setItem(item);
-        dto.setItemId(booking.getItem());
+        dto.setBooker(booking.getBooker());
+        dto.setUserId(booking.getBooker().getId());
+        dto.setItem(booking.getItem());
+        dto.setItemId(booking.getItem().getId());
         dto.setStatus(booking.getStatus());
         return dto;
     }

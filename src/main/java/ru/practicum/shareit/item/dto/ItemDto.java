@@ -2,6 +2,7 @@ package ru.practicum.shareit.item.dto;
 
 import lombok.Data;
 
+import ru.practicum.shareit.user.*;
 
 @Data
 public class ItemDto {
@@ -13,7 +14,7 @@ public class ItemDto {
 
     private Boolean available;
 
-    private Integer owner;
+    private User owner;
 
     private Integer request;
 

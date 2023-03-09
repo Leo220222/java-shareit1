@@ -14,9 +14,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false)
+    @Column(name = "name", nullable = false)
     @NotBlank(message = "имя не может быть пустым")
     private String name;
 
+    @Column(name = "email", nullable = false)
     private String email;
 }
