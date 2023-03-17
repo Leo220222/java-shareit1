@@ -38,7 +38,7 @@ public class ItemServiceImpl implements ItemService {
         if (item.getName().isEmpty() || item.getAvailable() == null || item.getDescription() == null) {
             throw new ResponseValidateException("Не передано одно из полей");
         }
-        if (userRepository.findById(item.getOwner()).isEmpty()) {
+        if (item.getOwner() == null) {
             throw new NotFoundException("Пользователь не найден");
         }
 
@@ -51,7 +51,7 @@ public class ItemServiceImpl implements ItemService {
         if (itemRepository.findById(item.getId()).isEmpty() || userRepository.findById(userId).isEmpty()) {
             throw new ResponseValidateException("ошибка");
         }
-        if (!itemRepository.findById(item.getId()).orElseThrow().getOwner().equals(userId)) {
+        if (!itemRepository.findById(item.getId()).orElseThrow().getOwner().getId().equals(userId)) {
             throw new NotFoundException("Пользователь не найден");
         }
         Item itemUpd = itemRepository.findById(item.getId()).orElseThrow();
@@ -98,7 +98,7 @@ public class ItemServiceImpl implements ItemService {
             itemDtoDate.setName(item.getName());
             itemDtoDate.setDescription(item.getDescription());
             itemDtoDate.setAvailable(item.getAvailable());
-            itemDtoDate.setOwner(item.getOwner());
+            itemDtoDate.setOwner(item.getOwner().getId());
             itemDtoDate.setLastBooking(bookingLast);
             itemDtoDate.setNextBooking(bookNext);
             list.add(itemDtoDate);
@@ -120,7 +120,7 @@ public class ItemServiceImpl implements ItemService {
         Set<Comment> comments = commentRepository.findAllByItem(itemId);
         Set<CommentDto> commentsDto = new HashSet<>();
         for (Comment comment : comments) {
-            User user = userRepository.findById(bookingLast.getBookerId()).orElseThrow();
+            User user = bookingLast.getBookerId();
             commentsDto.add(commentMapper.toDto(comment, user));
         }
         ItemDtoDate itemDtoDate = new ItemDtoDate();
@@ -128,8 +128,8 @@ public class ItemServiceImpl implements ItemService {
         itemDtoDate.setName(item.getName());
         itemDtoDate.setDescription(item.getDescription());
         itemDtoDate.setAvailable(item.getAvailable());
-        itemDtoDate.setOwner(item.getOwner());
-        if (item.getOwner().equals(userId)) {
+        itemDtoDate.setOwner(item.getOwner().getId());
+        if (item.getOwner().getId().equals(userId)) {
             itemDtoDate.setLastBooking(bookingLast);
             itemDtoDate.setNextBooking(bookNext);
         }
@@ -144,12 +144,12 @@ public class ItemServiceImpl implements ItemService {
     public CommentDto addComment(CommentDto commentDto, Integer itemId, Integer userId) {
 
         Comment comment = commentMapper.toComment(commentDto);
-        comment.setItem(itemId);
-        comment.setAuthor(userId);
+        comment.setItem(itemRepository.findById(itemId).orElseThrow());
+        comment.setAuthor(userRepository.findById(userId).orElseThrow());
         User user = getUser(userId);
         log.info("Before findBooking>>>>>>>>>>>> comment= {} , ====user= {}", commentDto, user);
         Collection<Booking> bookings =
-                bookingRepository.getByBookerAndItem(comment.getAuthor(), comment.getItem());
+                bookingRepository.getByBookerAndItem(comment.getAuthor().getId(), comment.getItem().getId());
         for (Booking booking : bookings) {
             log.info("booking >>>>>>>>> = {}", booking);
             if (booking != null && booking.getEnd().isBefore(LocalDateTime.now()) && !comment.getText().equals("")) {

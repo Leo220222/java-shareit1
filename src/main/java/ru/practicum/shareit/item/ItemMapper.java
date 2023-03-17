@@ -3,10 +3,16 @@ package ru.practicum.shareit.item;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.UserRepository;
 
 @Service
 public class ItemMapper {
+    private UserRepository userRepository;
+    private ItemRepository itemRepository;
+
+
     public ItemDto toDto(Item item) {
+
         ItemDto itemDto = new ItemDto();
 
         itemDto.setId(item.getId());
@@ -17,7 +23,7 @@ public class ItemMapper {
 
         itemDto.setAvailable(item.getAvailable());
 
-        itemDto.setOwner(item.getOwner());
+        itemDto.setOwner(item.getOwner().getId());
 
         itemDto.setRequest(item.getRequest());
 
@@ -36,7 +42,7 @@ public class ItemMapper {
 
         item.setAvailable(itemDto.getAvailable());
 
-        item.setOwner(ownerId);
+        item.setOwner(userRepository.findById(ownerId).orElseThrow());
 
         item.setRequest(itemDto.getRequest());
 
