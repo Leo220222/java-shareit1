@@ -3,6 +3,7 @@ package ru.practicum.shareit.item.model;
 import lombok.Data;
 
 import javax.persistence.*;
+import ru.practicum.shareit.user.User;
 
 @Data
 @Entity
@@ -19,7 +20,9 @@ public class Item {
 
     private Boolean available;
 
-    private Integer owner;
+    @ManyToOne
+    @JoinColumn(name = "owner", referencedColumnName = "id")
+    private User owner;
 
     private Integer request;
 }

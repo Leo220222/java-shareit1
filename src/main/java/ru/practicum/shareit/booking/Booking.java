@@ -1,11 +1,16 @@
 package ru.practicum.shareit.booking;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
-@Data
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.User;
+
+@Getter
+@Setter
 @Entity
 @Table(name = "bookings")
 public class Booking {
@@ -19,11 +24,13 @@ public class Booking {
     @Column(name = "end_date")
     private LocalDateTime end;
 
-    @Column(name = "item_id")
-    private Integer item;
+    @ManyToOne
+    @JoinColumn(name = "item_id", referencedColumnName = "id")
+    private Item item;
 
-    @Column(name = "user_id")
-    private Integer bookerId;
+    @ManyToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private User bookerId;
 
     @Enumerated(EnumType.STRING)
     private Status status;
