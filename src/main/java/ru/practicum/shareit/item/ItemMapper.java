@@ -19,7 +19,7 @@ public class ItemMapper {
 
         itemDto.setOwner(item.getOwner());
 
-        itemDto.setRequest(item.getRequest());
+        itemDto.setRequestId(item.getRequestId());
 
 
         return itemDto;
@@ -38,7 +38,7 @@ public class ItemMapper {
 
         item.setOwner(ownerId);
 
-        item.setRequest(itemDto.getRequest());
+        item.setRequestId(itemDto.getRequestId());
 
         return item;
     }

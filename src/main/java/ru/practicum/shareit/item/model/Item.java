@@ -21,5 +21,6 @@ public class Item {
 
     private Integer owner;
 
-    private Integer request;
+    @Column(name = "request")
+    private Integer requestId;
 }

@@ -2,13 +2,14 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
+
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
-import ru.practicum.shareit.exceptions.NotFoundException;
-import ru.practicum.shareit.exceptions.ResponseValidateException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDtoDate;
 import ru.practicum.shareit.item.model.Comment;
@@ -36,10 +37,10 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public Item add(Item item) {
         if (item.getName().isEmpty() || item.getAvailable() == null || item.getDescription() == null) {
-            throw new ResponseValidateException("Не передано одно из полей");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
         if (userRepository.findById(item.getOwner()).isEmpty()) {
-            throw new NotFoundException("Пользователь не найден");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 
         log.info("добавлена вещь /{}/", item);
@@ -49,10 +50,10 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public Item update(Item item, Integer userId) {
         if (itemRepository.findById(item.getId()).isEmpty() || userRepository.findById(userId).isEmpty()) {
-            throw new ResponseValidateException("ошибка");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         if (!itemRepository.findById(item.getId()).orElseThrow().getOwner().equals(userId)) {
-            throw new NotFoundException("Пользователь не найден");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         Item itemUpd = itemRepository.findById(item.getId()).orElseThrow();
         if (item.getName() != null) {
@@ -64,10 +65,10 @@ public class ItemServiceImpl implements ItemService {
         if (item.getAvailable() != null) {
             itemUpd.setAvailable(item.getAvailable());
         }
-        if (item.getRequest() != null) {
-            itemUpd.setRequest(item.getRequest());
+        if (item.getRequestId() != null) {
+            itemUpd.setRequestId(item.getRequestId());
         }
-        log.info("обновлена вещь newValue=/{}/", itemUpd.toString());
+        log.info("обновлена вещь newValue=/{}/", itemUpd);
         return itemRepository.save(itemUpd);
     }
 
@@ -78,21 +79,41 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Collection<Item> getByNameOrDesc(String text) {
+    public Collection<Item> getByNameOrDesc(String text, Integer page, Integer size) {
         if (text.equals("")) {
             return new ArrayList<Item>();
         }
-        ArrayList<Item> listSearch = (ArrayList<Item>) itemRepository.findByNameOrDesc(text);
+        List<Item> listSearch =
+                itemRepository.findByNameOrDesc(text, PageRequest.of(page, size)).toList();
         log.info("запрошен поиск по строке /{}/ ,найдено /{}/", text, listSearch.size());
         return listSearch;
     }
 
     @Override
-    public Collection<ItemDtoDate> getAll(Integer userId) {
+    public Collection<ItemDtoDate> getAll(Integer userId, Integer page, Integer size) {
         ArrayList<ItemDtoDate> list = new ArrayList<>();
-        for (Item item : itemRepository.findAllByOwnerOrderById(userId)) {
-            Booking bookingLast = bookingRepository.getLastBooking(item.getId(), LocalDateTime.now());
-            Booking bookNext = bookingRepository.getNextBooking(item.getId(), LocalDateTime.now());
+        List<Item> itemList = itemRepository.findAllByOwnerOrderById(userId, PageRequest.of(page, size)).toList();
+        List<Booking> bookingsLast =
+                bookingRepository.getByOwnerPast(userId, LocalDateTime.now(), PageRequest.of(page, size)).toList();
+        List<Booking> bookingsNext =
+                bookingRepository.getByOwnerFuture(userId, LocalDateTime.now(), PageRequest.of(page, size)).toList();
+        for (Item item : itemList) {
+            Booking bookingLast = null;
+            Booking bookNext = null;
+            int idItem = item.getId();
+            for (Booking booking : bookingsLast) {
+                int idBookingItem = booking.getItem();
+                if (idItem == idBookingItem) {
+                    bookingLast = booking;
+                }
+            }
+
+            for (Booking booking : bookingsNext) {
+                int idBookingItem = booking.getItem();
+                if (idItem == idBookingItem) {
+                    bookNext = booking;
+                }
+            }
             ItemDtoDate itemDtoDate = new ItemDtoDate();
             itemDtoDate.setId(item.getId());
             itemDtoDate.setName(item.getName());
@@ -109,14 +130,15 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public void delete(Integer itemId, Integer userId) {
+        itemRepository.deleteById(itemId);
     }
 
     @Override
     public ItemDtoDate getItemDate(Integer itemId, LocalDateTime dateTime, Integer userId) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Booking bookingLast = bookingRepository.getLastBooking(itemId, LocalDateTime.now());
-        Booking bookNext = bookingRepository.getNextBooking(itemId, LocalDateTime.now());
+        Booking bookingLast = bookingRepository.getLastBooking(itemId, dateTime);
+        Booking bookingNext = bookingRepository.getNextBooking(itemId, dateTime);
         Set<Comment> comments = commentRepository.findAllByItem(itemId);
         Set<CommentDto> commentsDto = new HashSet<>();
         for (Comment comment : comments) {
@@ -131,7 +153,7 @@ public class ItemServiceImpl implements ItemService {
         itemDtoDate.setOwner(item.getOwner());
         if (item.getOwner().equals(userId)) {
             itemDtoDate.setLastBooking(bookingLast);
-            itemDtoDate.setNextBooking(bookNext);
+            itemDtoDate.setNextBooking(bookingNext);
         }
         if (comments.size() > 0) {
             itemDtoDate.setComments(commentsDto);
@@ -152,7 +174,8 @@ public class ItemServiceImpl implements ItemService {
                 bookingRepository.getByBookerAndItem(comment.getAuthor(), comment.getItem());
         for (Booking booking : bookings) {
             log.info("booking >>>>>>>>> = {}", booking);
-            if (booking != null && booking.getEnd().isBefore(LocalDateTime.now()) && !comment.getText().equals("")) {
+            if (booking != null && booking.getEnd().isBefore(LocalDateTime.now())
+                    && !"".equals(comment.getText())) {
                 log.info("добавлен отзыв /{}/", comment);
                 commentRepository.save(comment);
                 return commentMapper.toDto(comment, user);

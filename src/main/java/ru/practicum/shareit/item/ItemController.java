@@ -41,14 +41,18 @@ public class ItemController {
     }
 
     @GetMapping
-    public Collection<ItemDtoDate> getAll(@RequestHeader("X-Sharer-User-Id") Integer userId) {
-        return itemService.getAll(userId);
+    public Collection<ItemDtoDate> getAll(@RequestHeader("X-Sharer-User-Id") Integer userId,
+                                          @RequestParam(required = false, defaultValue = "0") Integer from,
+                                          @RequestParam(required = false, defaultValue = "10") Integer size) {
+        return itemService.getAll(userId, from, size);
     }
 
     @GetMapping("/search")
-    public Collection<ItemDto> getByNameOrDesc(@RequestParam String text) {
+    public Collection<ItemDto> getByNameOrDesc(@RequestParam String text,
+                                               @RequestParam(required = false, defaultValue = "0") Integer from,
+                                               @RequestParam(required = false, defaultValue = "10") Integer size) {
         ArrayList<ItemDto> listDto = new ArrayList<>();
-        for (Item item : itemService.getByNameOrDesc(text)) {
+        for (Item item : itemService.getByNameOrDesc(text, from, size)) {
             listDto.add(itemMapper.toDto(item));
         }
         return listDto;

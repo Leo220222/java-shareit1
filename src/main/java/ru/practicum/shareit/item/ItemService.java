@@ -15,9 +15,9 @@ public interface ItemService {
 
     Item getById(Integer id);
 
-    Collection<ItemDtoDate> getAll(Integer userId);
+    Collection<ItemDtoDate> getAll(Integer userId, Integer page, Integer size);
 
-    Collection<Item> getByNameOrDesc(String text);
+    Collection<Item> getByNameOrDesc(String text, Integer page, Integer size);
 
     void delete(Integer itemId, Integer userId);
 
